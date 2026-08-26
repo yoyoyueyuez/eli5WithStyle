@@ -1,0 +1,745 @@
+<!doctype html>
+<title>Poke the Page</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ---- tokens: light (complete palette on :root) ---- */
+  :root {
+    --bg: #F5F5F5;
+    --surface: #FFFFFF;
+    --surface-2: #FAFAFA;
+    --ink: #1F1F1F;
+    --ink-2: #595959;
+    --ink-3: #BFBFBF;
+    --line: #D9D9D9;
+    --line-2: #F0F0F0;
+    --primary: #1677FF;
+    --primary-hover: #4096FF;
+    --primary-active: #0958D9;
+    --primary-text: #0958D9;
+    --tint: #E6F4FF;
+    --success: #52C41A;
+    --success-tint: #F6FFED;
+    --error: #FF4D4F;
+    --error-tint: #FFF2F0;
+    --gold: #FAAD14;
+    --gold-tint: #FFFBE6;
+    --code-bg: #1F1F1F;
+    --code-ink: #D9D9D9;
+    --code-dim: #8C8C8C;
+    --code-blue: #69B1FF;
+    --code-gold: #FAAD14;
+    --code-green: #95DE64;
+    --code-red: #FF7875;
+    --shadow: 0 1px 2px rgba(0,0,0,0.05), 0 1px 6px -1px rgba(0,0,0,0.03), 0 2px 4px rgba(0,0,0,0.03);
+    --shadow-pop: 0 6px 16px rgba(0,0,0,0.08), 0 3px 6px -4px rgba(0,0,0,0.12), 0 9px 28px 8px rgba(0,0,0,0.05);
+    --btn-shadow: 0 4px 12px rgba(22,119,255,0.35);
+  }
+
+  /* ---- tokens: dark (guarded so explicit light wins) ---- */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141414;
+      --surface: #1F1F1F;
+      --surface-2: #262626;
+      --ink: rgba(255,255,255,0.88);
+      --ink-2: rgba(255,255,255,0.65);
+      --ink-3: rgba(255,255,255,0.35);
+      --line: #424242;
+      --line-2: #303030;
+      --primary: #1668DC;
+      --primary-hover: #3C89E8;
+      --primary-active: #0958D9;
+      --primary-text: #4096FF;
+      --tint: rgba(22,119,255,0.16);
+      --success: #49AA19;
+      --success-tint: rgba(82,196,26,0.16);
+      --error: #DC4446;
+      --error-tint: rgba(255,77,79,0.16);
+      --gold: #D89614;
+      --gold-tint: rgba(250,173,20,0.16);
+      --code-bg: #0A0A0A;
+      --code-ink: #D9D9D9;
+      --code-dim: #8C8C8C;
+      --code-blue: #69B1FF;
+      --code-gold: #FAAD14;
+      --code-green: #95DE64;
+      --code-red: #FF7875;
+      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 1px 6px -1px rgba(0,0,0,0.5);
+      --shadow-pop: 0 6px 16px rgba(0,0,0,0.5), 0 3px 6px -4px rgba(0,0,0,0.6), 0 9px 28px 8px rgba(0,0,0,0.45);
+      --btn-shadow: 0 4px 14px rgba(22,119,255,0.45);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141414;
+    --surface: #1F1F1F;
+    --surface-2: #262626;
+    --ink: rgba(255,255,255,0.88);
+    --ink-2: rgba(255,255,255,0.65);
+    --ink-3: rgba(255,255,255,0.35);
+    --line: #424242;
+    --line-2: #303030;
+    --primary: #1668DC;
+    --primary-hover: #3C89E8;
+    --primary-active: #0958D9;
+    --primary-text: #4096FF;
+    --tint: rgba(22,119,255,0.16);
+    --success: #49AA19;
+    --success-tint: rgba(82,196,26,0.16);
+    --error: #DC4446;
+    --error-tint: rgba(255,77,79,0.16);
+    --gold: #D89614;
+    --gold-tint: rgba(250,173,20,0.16);
+    --code-bg: #0A0A0A;
+    --code-ink: #D9D9D9;
+    --code-dim: #8C8C8C;
+    --code-blue: #69B1FF;
+    --code-gold: #FAAD14;
+    --code-green: #95DE64;
+    --code-red: #FF7875;
+    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 1px 6px -1px rgba(0,0,0,0.5);
+    --shadow-pop: 0 6px 16px rgba(0,0,0,0.5), 0 3px 6px -4px rgba(0,0,0,0.6), 0 9px 28px 8px rgba(0,0,0,0.45);
+    --btn-shadow: 0 4px 14px rgba(22,119,255,0.45);
+  }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    font-size: 17px;
+    line-height: 1.6;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 24px 110px;
+  }
+
+  ::selection { background: var(--tint); color: var(--ink); }
+
+  /* ---- type ---- */
+  .display {
+    font-size: clamp(40px, 6.5vw, 58px);
+    line-height: 1.04;
+    font-weight: 600;
+    text-wrap: balance;
+    letter-spacing: -0.015em;
+  }
+  .h2 {
+    font-size: clamp(25px, 3.4vw, 32px);
+    line-height: 1.18;
+    font-weight: 600;
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+  .lede {
+    font-size: 19px;
+    line-height: 1.55;
+    color: var(--ink-2);
+    max-width: 36em;
+    margin: 16px auto 0;
+  }
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--primary-text);
+  }
+  .stepno {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    font-size: 13px;
+    color: var(--primary-text);
+    background: var(--tint);
+    border-radius: 4px;
+    padding: 2px 8px;
+  }
+
+  /* ---- hero ---- */
+  header {
+    text-align: center;
+    padding: 72px 0 8px;
+  }
+  .demo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+    margin-top: 44px;
+  }
+  .btn {
+    font-family: inherit;
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: #FFFFFF;
+    background: var(--primary);
+    border: none;
+    border-radius: 8px;
+    padding: 20px 44px;
+    cursor: pointer;
+    box-shadow: var(--btn-shadow);
+    transition: background 0.2s, transform 0.1s;
+  }
+  .btn:hover { background: var(--primary-hover); }
+  .btn:active { background: var(--primary-active); transform: translateY(1px); }
+  .btn:focus-visible { outline: 3px solid var(--primary-hover); outline-offset: 3px; }
+
+  .countwrap {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .count {
+    font-size: 66px;
+    font-weight: 600;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    display: inline-block;
+  }
+  .count.pop { animation: pop 0.28s ease; }
+  @keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.22); } 100% { transform: scale(1); } }
+  .countlabel { font-size: 15px; color: var(--ink-2); }
+  .demolog {
+    font-size: 14px;
+    color: var(--ink-2);
+    background: var(--surface);
+    border: 1px solid var(--line-2);
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-variant-numeric: tabular-nums;
+  }
+  .demolog code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    font-size: 12px;
+    color: var(--primary-text);
+    background: var(--tint);
+    border-radius: 4px;
+    padding: 1px 6px;
+  }
+  .hint {
+    font-size: 13px;
+    color: var(--ink-3);
+    margin-top: 26px;
+  }
+
+  /* ---- chapters ---- */
+  .chapter { margin-top: 92px; }
+  .chapter:first-of-type { margin-top: 76px; }
+  .chapter-head { text-align: center; }
+  .chapter-head .h2 { margin-top: 10px; }
+  .chapter-head .lead { margin-top: 12px; }
+  .lead {
+    font-size: 17px;
+    color: var(--ink-2);
+    max-width: 34em;
+    margin: 0 auto;
+  }
+
+  figure {
+    margin: 34px auto 0;
+    max-width: 840px;
+  }
+  figure svg {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    height: auto;
+  }
+  figcaption {
+    font-size: 14px;
+    color: var(--ink-2);
+    text-align: center;
+    max-width: 40em;
+    margin: 16px auto 0;
+    padding: 0 8px;
+  }
+
+  .duo {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 28px;
+    align-items: center;
+    margin-top: 34px;
+    justify-content: center;
+  }
+  .duo > * { flex: 1 1 320px; min-width: 0; }
+
+  /* ---- code ---- */
+  .codecard {
+    background: var(--code-bg);
+    color: var(--code-ink);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: 20px 22px;
+    overflow-x: auto;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    font-size: 14.5px;
+    line-height: 1.75;
+    white-space: pre;
+  }
+  .tok-tag  { color: var(--code-blue); }
+  .tok-prop { color: #69B1FF; font-weight: 600; }
+  .tok-str  { color: var(--code-gold); }
+  .tok-name { color: var(--code-gold); }
+  .tok-punc { color: var(--code-dim); }
+  .tok-com  { color: var(--code-green); }
+  .tok-err  { color: var(--code-red); font-weight: 600; }
+  .codebar {
+    background: var(--code-bg);
+    color: var(--code-ink);
+    border-radius: 6px;
+    padding: 11px 14px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    font-size: 13.5px;
+    line-height: 1.5;
+    white-space: nowrap;
+    overflow-x: auto;
+  }
+
+  /* ---- chips ---- */
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 30px;
+  }
+  .chip {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    box-shadow: var(--shadow);
+    padding: 14px 18px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-width: 116px;
+  }
+  .chip b {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .chip code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    font-size: 12px;
+    color: var(--primary-text);
+    background: var(--tint);
+    border-radius: 4px;
+    padding: 2px 8px;
+  }
+
+  /* ---- field (key demo) ---- */
+  .field {
+    font-family: inherit;
+    font-size: 17px;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 13px 18px;
+    width: min(420px, 100%);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .field::placeholder { color: var(--ink-3); }
+  .field:focus-visible {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--tint);
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 110px;
+    font-size: 15px;
+    color: var(--ink-3);
+  }
+  footer .big {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .count.pop { animation: none; }
+    .btn { transition: none; }
+  }
+</style>
+
+<!-- shared arrowhead marker -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+</svg>
+
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">React &middot; events &middot; ELI5</div>
+    <h1 class="display" style="margin-top:14px">Events are just pokes.</h1>
+    <p class="lede">A page is full of things you can poke — buttons, boxes, keys. Poke one and you've made an <b>event</b>. You get to say what happens next.</p>
+
+    <div class="demo" role="group" aria-label="Live demo: poke the button">
+      <button id="pokeBtn" class="btn">Poke me</button>
+      <div class="countwrap">
+        <span id="pokeCount" class="count" aria-live="polite">0</span>
+        <span class="countlabel">pokes</span>
+      </div>
+      <p id="pokeLog" class="demolog">Ready. Poke the button and a <code>click</code> event happens.</p>
+    </div>
+    <p class="hint">This page uses plain JavaScript to show the idea. React does the same thing with <code>onClick</code>.</p>
+  </header>
+
+  <!-- ============ 1 ============ -->
+  <section class="chapter">
+    <div class="chapter-head">
+      <span class="stepno">01</span>
+      <h2 class="h2" style="margin-top:12px">Every poke has a name.</h2>
+      <p class="lead">Click, type, press a key, send a form — the browser names each poke, and React listens.</p>
+    </div>
+
+    <figure>
+      <svg viewBox="0 0 760 230" role="img" aria-label="A pointer pokes a button, which becomes a click event that React calls onClick">
+        <!-- cursor -->
+        <g fill="var(--ink)" transform="translate(64,88) scale(1.45)">
+          <polygon points="2,2 2,60 15,45 23,72 31,68 24,43 38,41" />
+        </g>
+        <!-- poke arrow -->
+        <line x1="170" y1="122" x2="246" y2="122" stroke="var(--ink-2)" stroke-width="2" marker-end="url(#arr)"/>
+        <text x="208" y="110" text-anchor="middle" font-size="12" fill="var(--ink-2)">poke</text>
+        <!-- button -->
+        <rect x="258" y="72" width="240" height="100" rx="10" fill="var(--primary)"/>
+        <text x="378" y="129" text-anchor="middle" font-size="21" font-weight="600" fill="#FFFFFF">Poke me</text>
+        <!-- event arrow -->
+        <line x1="498" y1="122" x2="556" y2="122" stroke="var(--ink-2)" stroke-width="2" marker-end="url(#arr)"/>
+        <text x="527" y="110" text-anchor="middle" font-size="12" fill="var(--ink-2)">event</text>
+        <!-- burst -->
+        <rect x="568" y="80" width="172" height="84" rx="14" fill="var(--tint)" stroke="var(--primary)" stroke-width="1.5"/>
+        <text x="654" y="132" text-anchor="middle" font-size="26" font-weight="600" fill="var(--primary-text)">click!</text>
+        <!-- react name -->
+        <line x1="378" y1="172" x2="378" y2="196" stroke="var(--ink-3)" stroke-width="1.5"/>
+        <rect x="334" y="198" width="88" height="26" rx="4" fill="var(--tint)"/>
+        <text x="378" y="216" text-anchor="middle" font-family="SFMono-Regular, Consolas, Menlo, monospace" font-size="13" fill="var(--primary-text)">onClick</text>
+      </svg>
+      <figcaption>React gives every poke a name. It calls this one <b>click</b> — and listens for it.</figcaption>
+    </figure>
+
+    <div class="chips">
+      <div class="chip"><b>TYPE</b><code>onChange</code></div>
+      <div class="chip"><b>KEY</b><code>onKeyDown</code></div>
+      <div class="chip"><b>HOVER</b><code>onMouseEnter</code></div>
+      <div class="chip"><b>SUBMIT</b><code>onSubmit</code></div>
+    </div>
+  </section>
+
+  <!-- ============ 2 ============ -->
+  <section class="chapter">
+    <div class="chapter-head">
+      <span class="stepno">02</span>
+      <h2 class="h2" style="margin-top:12px">Stick a note on the thing.</h2>
+      <p class="lead">You decide what each poke does. Stick a tiny note on the button that says what should happen.</p>
+    </div>
+
+    <div class="duo">
+      <figure style="margin:0;flex:1.05 1 360px">
+        <svg viewBox="0 0 420 300" role="img" aria-label="A sticky note that says say hello is pinned on a Poke me button">
+          <!-- button -->
+          <rect x="30" y="110" width="220" height="130" rx="10" fill="var(--primary)"/>
+          <text x="140" y="184" text-anchor="middle" font-size="21" font-weight="600" fill="#FFFFFF">Poke me</text>
+          <!-- sticky note -->
+          <g transform="rotate(-5 220 60)">
+            <rect x="150" y="16" width="150" height="120" rx="4" fill="var(--gold-tint)" stroke="var(--gold)" stroke-width="1.5"/>
+            <text x="225" y="82" text-anchor="middle" font-size="18" font-weight="600" fill="var(--ink)">say hello</text>
+          </g>
+          <!-- connector -->
+          <path d="M 272 88 Q 300 90 316 108" fill="none" stroke="var(--primary)" stroke-width="2" stroke-dasharray="4 5" marker-end="url(#arr)"/>
+          <text x="300" y="82" text-anchor="middle" font-size="12" fill="var(--primary-text)">the note</text>
+        </svg>
+        <figcaption>The note <b>is</b> the function. You stick it on the button.</figcaption>
+      </figure>
+
+      <div class="codecard" style="font-size:13.5px"><span class="tok-tag">&lt;button</span> <span class="tok-prop">onClick</span><span class="tok-punc">={</span><span class="tok-name">sayHello</span><span class="tok-punc">}</span><span class="tok-tag">&gt;</span>
+<span class="tok-str">  Poke me</span>
+<span class="tok-tag">&lt;/button&gt;</span>
+
+<span class="tok-com">// "when clicked, run sayHello"</span></div>
+    </div>
+  </section>
+
+  <!-- ============ 3 ============ -->
+  <section class="chapter">
+    <div class="chapter-head">
+      <span class="stepno">03</span>
+      <h2 class="h2" style="margin-top:12px">Hand the note over. Don't read it now.</h2>
+      <p class="lead"><code>onClick</code> wants the note itself. If you put <code>()</code>, you read it out loud right away — before anyone clicks.</p>
+    </div>
+
+    <figure>
+      <svg viewBox="0 0 760 360" role="img" aria-label="Handing the function over runs it on click; calling it with parentheses runs it too early">
+        <!-- LEFT column -->
+        <rect x="350" y="26" width="130" height="28" rx="14" fill="var(--success-tint)" stroke="var(--success)" stroke-width="1.5"/>
+        <text x="415" y="45" text-anchor="middle" font-size="13" font-weight="600" fill="var(--success)">&#10003; called later</text>
+
+        <g transform="rotate(-3 200 95)">
+          <rect x="90" y="40" width="220" height="100" rx="6" fill="var(--gold-tint)" stroke="var(--gold)" stroke-width="1.5"/>
+          <text x="200" y="102" text-anchor="middle" font-size="17" font-weight="600" fill="var(--ink)">say hello</text>
+        </g>
+        <line x1="200" y1="150" x2="200" y2="200" stroke="var(--ink-2)" stroke-width="2" marker-end="url(#arr)"/>
+        <text x="212" y="180" font-size="12" fill="var(--ink-2)">when you click</text>
+        <rect x="80" y="206" width="240" height="62" rx="8" fill="var(--surface)" stroke="var(--primary)" stroke-width="2"/>
+        <text x="200" y="246" text-anchor="middle" font-size="18" font-weight="600" fill="var(--primary-text)">Poke me</text>
+
+        <rect x="50" y="298" width="330" height="38" rx="6" fill="var(--code-bg)"/>
+        <text x="70" y="322" font-family="SFMono-Regular, Consolas, Menlo, monospace" font-size="14" fill="var(--code-ink)"><tspan fill="#69B1FF" font-weight="600">onClick</tspan><tspan fill="#8C8C8C">={</tspan><tspan fill="#FAAD14">sayHello</tspan><tspan fill="#8C8C8C">}</tspan></text>
+
+        <!-- RIGHT column -->
+        <rect x="610" y="26" width="130" height="28" rx="14" fill="var(--error-tint)" stroke="var(--error)" stroke-width="1.5"/>
+        <text x="675" y="45" text-anchor="middle" font-size="13" font-weight="600" fill="var(--error)">&#10007; too early</text>
+
+        <g transform="rotate(3 560 95)">
+          <rect x="450" y="40" width="220" height="100" rx="6" fill="var(--gold-tint)" stroke="var(--gold)" stroke-width="1.5"/>
+          <text x="560" y="102" text-anchor="middle" font-size="17" font-weight="600" fill="var(--ink)">say hello<tspan fill="#FF7875">()</tspan></text>
+        </g>
+        <rect x="560" y="158" width="120" height="30" rx="15" fill="var(--error-tint)" stroke="var(--error)" stroke-width="1.5"/>
+        <text x="620" y="177" text-anchor="middle" font-size="13" font-weight="600" fill="var(--error)">"hello!" now</text>
+        <line x1="560" y1="150" x2="560" y2="156" stroke="var(--error)" stroke-width="2" marker-end="url(#arr)"/>
+        <text x="430" y="182" font-size="12" fill="var(--ink-2)">right now, at page load</text>
+
+        <rect x="440" y="206" width="240" height="62" rx="8" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="560" y="246" text-anchor="middle" font-size="18" font-weight="600" fill="var(--ink-3)">Poke me</text>
+
+        <rect x="410" y="298" width="330" height="38" rx="6" fill="var(--code-bg)"/>
+        <text x="430" y="322" font-family="SFMono-Regular, Consolas, Menlo, monospace" font-size="14" fill="var(--code-ink)"><tspan fill="#69B1FF" font-weight="600">onClick</tspan><tspan fill="#8C8C8C">={</tspan><tspan fill="#FAAD14">sayHello</tspan><tspan fill="#FF7875" font-weight="600">()</tspan><tspan fill="#8C8C8C">}</tspan></text>
+      </svg>
+      <figcaption>No <code>()</code> — you hand the note over, and it runs <b>when clicked</b>. With <code>()</code> — you run it <b>right now</b>. This is the classic first bug.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ 4 ============ -->
+  <section class="chapter">
+    <div class="chapter-head">
+      <span class="stepno">04</span>
+      <h2 class="h2" style="margin-top:12px">The poke comes with a backpack.</h2>
+      <p class="lead">Every event carries facts: which key, where you clicked. React hands the backpack to your note as <code>e</code>.</p>
+    </div>
+
+    <figure>
+      <svg viewBox="0 0 760 210" role="img" aria-label="A typed key becomes an event object e with facts like which key and where you clicked">
+        <!-- input -->
+        <rect x="30" y="75" width="210" height="66" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="135" y="112" text-anchor="middle" font-size="16" fill="var(--ink-3)">type here&hellip;</text>
+        <!-- arrow in -->
+        <line x1="240" y1="108" x2="300" y2="108" stroke="var(--ink-2)" stroke-width="2" marker-end="url(#arr)"/>
+        <text x="270" y="96" text-anchor="middle" font-size="12" fill="var(--ink-2)">keydown</text>
+        <!-- event card -->
+        <rect x="304" y="44" width="150" height="128" rx="8" fill="var(--tint)" stroke="var(--primary)" stroke-width="1.5"/>
+        <text x="379" y="114" text-anchor="middle" font-family="SFMono-Regular, Consolas, Menlo, monospace" font-size="30" font-weight="600" fill="var(--primary-text)">e</text>
+        <text x="379" y="140" text-anchor="middle" font-size="12" fill="var(--primary-text)">the event</text>
+        <!-- facts -->
+        <line x1="454" y1="72" x2="516" y2="72" stroke="var(--ink-2)" stroke-width="1.5"/>
+        <rect x="520" y="54" width="220" height="34" rx="17" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="630" y="76" text-anchor="middle" font-family="SFMono-Regular, Consolas, Menlo, monospace" font-size="13" fill="var(--ink)">which key</text>
+        <line x1="454" y1="100" x2="516" y2="100" stroke="var(--ink-2)" stroke-width="1.5"/>
+        <rect x="520" y="88" width="220" height="34" rx="17" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="630" y="110" text-anchor="middle" font-family="SFMono-Regular, Consolas, Menlo, monospace" font-size="13" fill="var(--ink)">where you clicked</text>
+        <line x1="454" y1="130" x2="516" y2="130" stroke="var(--ink-2)" stroke-width="1.5"/>
+        <rect x="520" y="126" width="220" height="34" rx="17" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="630" y="148" text-anchor="middle" font-family="SFMono-Regular, Consolas, Menlo, monospace" font-size="13" fill="var(--ink)">shift or not</text>
+      </svg>
+      <figcaption>Peek inside the backpack with the little <code>e</code>.</figcaption>
+    </figure>
+
+    <div class="demo" style="margin-top:30px" role="group" aria-label="Live demo: type to read the event backpack">
+      <input id="keyInput" class="field" type="text" placeholder="type anything here…" autocomplete="off" spellcheck="false" aria-label="Type to trigger keydown events">
+      <p class="demolog"><span id="keyRead">backpack: nothing yet</span></p>
+    </div>
+
+    <div class="codecard" style="max-width:600px;margin:26px auto 0;font-size:13.5px"><span class="tok-prop">onKeyDown</span><span class="tok-punc">={(</span><span class="tok-name">e</span><span class="tok-punc">) =&gt;</span> <span class="tok-name">console</span><span class="tok-punc">.</span><span class="tok-name">log</span><span class="tok-punc">(</span><span class="tok-name">e</span><span class="tok-punc">.</span><span class="tok-prop">key</span><span class="tok-punc">)}</span>
+
+<span class="tok-com">// type above — the backpack is being read</span></div>
+  </section>
+
+  <!-- ============ 5 ============ -->
+  <section class="chapter">
+    <div class="chapter-head">
+      <span class="stepno">05</span>
+      <h2 class="h2" style="margin-top:12px">React makes its own copy.</h2>
+      <p class="lead">Every browser pokes a little differently. React copies each poke into one standard shape — a <b>synthetic event</b> — so your note reads the same backpack on any device.</p>
+    </div>
+
+    <figure>
+      <svg viewBox="0 0 760 350" role="img" aria-label="A phone, laptop and tablet poke differently; React copies each poke into one standard synthetic event">
+        <!-- phone -->
+        <rect x="20" y="30" width="70" height="88" rx="12" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+        <rect x="32" y="42" width="46" height="56" rx="6" fill="var(--surface-2)"/>
+        <rect x="44" y="102" width="22" height="5" rx="2.5" fill="var(--ink-3)"/>
+        <text x="55" y="136" text-anchor="middle" font-size="12" fill="var(--ink-2)">phone</text>
+        <rect x="106" y="40" width="74" height="26" rx="13" fill="var(--tint)" stroke="var(--primary)" stroke-width="1.5"/>
+        <text x="143" y="58" text-anchor="middle" font-size="12" font-weight="600" fill="var(--primary-text)">poke!</text>
+        <line x1="180" y1="53" x2="330" y2="84" stroke="var(--ink-2)" stroke-width="2" marker-end="url(#arr)"/>
+
+        <!-- laptop -->
+        <rect x="20" y="150" width="112" height="62" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+        <rect x="32" y="160" width="88" height="38" rx="4" fill="var(--surface-2)"/>
+        <rect x="32" y="200" width="88" height="7" rx="2" fill="var(--ink-3)"/>
+        <text x="76" y="230" text-anchor="middle" font-size="12" fill="var(--ink-2)">laptop</text>
+        <rect x="148" y="157" width="74" height="26" rx="13" fill="var(--tint)" stroke="var(--primary)" stroke-width="1.5"/>
+        <text x="185" y="175" text-anchor="middle" font-size="12" font-weight="600" fill="var(--primary-text)">poke?</text>
+        <line x1="222" y1="170" x2="330" y2="170" stroke="var(--ink-2)" stroke-width="2" marker-end="url(#arr)"/>
+
+        <!-- tablet -->
+        <rect x="20" y="238" width="88" height="84" rx="10" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+        <rect x="32" y="248" width="64" height="58" rx="6" fill="var(--surface-2)"/>
+        <text x="64" y="340" text-anchor="middle" font-size="12" fill="var(--ink-2)">tablet</text>
+        <rect x="124" y="248" width="74" height="26" rx="13" fill="var(--tint)" stroke="var(--primary)" stroke-width="1.5"/>
+        <text x="161" y="266" text-anchor="middle" font-size="12" font-weight="600" fill="var(--primary-text)">poke!</text>
+        <line x1="198" y1="261" x2="330" y2="261" stroke="var(--ink-2)" stroke-width="2" marker-end="url(#arr)"/>
+
+        <!-- React card -->
+        <rect x="330" y="60" width="180" height="220" rx="12" fill="var(--tint)" stroke="var(--primary)" stroke-width="1.5"/>
+        <text x="420" y="128" text-anchor="middle" font-size="24" font-weight="600" fill="var(--primary-text)">React</text>
+        <text x="420" y="158" text-anchor="middle" font-size="13" fill="var(--primary-text)">copies every poke</text>
+        <text x="420" y="182" text-anchor="middle" font-size="13" fill="var(--primary-text)">into one standard shape</text>
+
+        <!-- standard copy -->
+        <line x1="510" y1="150" x2="540" y2="150" stroke="var(--ink-2)" stroke-width="2" marker-end="url(#arr)"/>
+        <rect x="540" y="90" width="200" height="170" rx="12" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="640" y="160" text-anchor="middle" font-family="SFMono-Regular, Consolas, Menlo, monospace" font-size="34" font-weight="600" fill="var(--primary-text)">e</text>
+        <text x="640" y="214" text-anchor="middle" font-size="14" fill="var(--ink)">synthetic event</text>
+        <text x="640" y="240" text-anchor="middle" font-size="12" fill="var(--ink-2)">same shape everywhere</text>
+      </svg>
+      <figcaption>Every device pokes a little differently. React catches each poke and makes <b>one standard copy</b> — a <b>synthetic event</b> — so the backpack looks the same everywhere.</figcaption>
+    </figure>
+
+    <div class="codecard" style="max-width:600px;margin:26px auto 0;font-size:13.5px"><span class="tok-prop">onClick</span><span class="tok-punc">={(</span><span class="tok-name">e</span><span class="tok-punc">) =&gt;</span> <span class="tok-name">readThe</span><span class="tok-punc">(</span><span class="tok-name">e</span><span class="tok-punc">)}</span>
+
+<span class="tok-com">// e is React's copy — the synthetic event</span>
+<span class="tok-com">// the original poke is tucked inside: e.nativeEvent</span></div>
+  </section>
+
+  <!-- ============ 6 ============ -->
+  <section class="chapter">
+    <div class="chapter-head">
+      <span class="stepno">06</span>
+      <h2 class="h2" style="margin-top:12px">One listener at the top.</h2>
+      <p class="lead">You stick a note on each thing. But React doesn't put an ear on every thing — it puts <b>one</b> listener at the top, and every poke bubbles up to it.</p>
+    </div>
+
+    <figure>
+      <svg viewBox="0 0 760 330" role="img" aria-label="A poke bubbles up from a button, through a card and the page, to one listener at the top, which runs the right note">
+        <!-- one listener -->
+        <rect x="240" y="18" width="280" height="46" rx="23" fill="var(--tint)" stroke="var(--primary)" stroke-width="1.5"/>
+        <text x="380" y="47" text-anchor="middle" font-size="16" font-weight="600" fill="var(--primary-text)">one listener, at the top</text>
+
+        <!-- page -->
+        <rect x="50" y="94" width="660" height="212" rx="14" fill="var(--surface-2)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="72" y="120" font-size="13" fill="var(--ink-2)">the page</text>
+
+        <!-- card -->
+        <rect x="140" y="148" width="480" height="142" rx="10" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="162" y="174" font-size="13" fill="var(--ink-2)">a card</text>
+
+        <!-- button -->
+        <rect x="290" y="188" width="170" height="54" rx="8" fill="var(--primary)"/>
+        <text x="375" y="222" text-anchor="middle" font-size="18" font-weight="600" fill="#FFFFFF">Poke me</text>
+
+        <!-- note -->
+        <g transform="rotate(6 480 205)">
+          <rect x="420" y="166" width="120" height="84" rx="4" fill="var(--gold-tint)" stroke="var(--gold)" stroke-width="1.5"/>
+          <text x="480" y="214" text-anchor="middle" font-size="16" font-weight="600" fill="var(--ink)">say hello</text>
+        </g>
+
+        <!-- bubble path up -->
+        <path d="M 375 186 Q 330 118 370 70" fill="none" stroke="var(--primary)" stroke-width="2" stroke-dasharray="5 5" marker-end="url(#arr)"/>
+        <text x="318" y="116" text-anchor="end" font-size="12" fill="var(--ink-2)">the poke bubbles up</text>
+        <text x="318" y="136" text-anchor="end" font-size="12" fill="var(--ink-2)">through its parents</text>
+
+        <!-- listener runs the note -->
+        <path d="M 522 44 Q 560 100 528 162" fill="none" stroke="var(--ink-2)" stroke-width="2" marker-end="url(#arr)"/>
+        <text x="556" y="148" font-size="12" fill="var(--ink-2)">runs the right note</text>
+      </svg>
+      <figcaption>You write a note on each thing — but React doesn't glue an ear to every thing. It puts <b>one listener</b> at the top. Every poke bubbles up to it, and it runs the right note.</figcaption>
+    </figure>
+
+    <div class="codecard" style="max-width:600px;margin:26px auto 0;font-size:13.5px"><span class="tok-com">// you write this — a note on each thing</span>
+<span class="tok-tag">&lt;button</span> <span class="tok-prop">onClick</span><span class="tok-punc">={</span><span class="tok-name">sayHello</span><span class="tok-punc">}</span><span class="tok-tag">&gt;</span><span class="tok-str">Poke me</span><span class="tok-tag">&lt;/button&gt;</span>
+
+<span class="tok-com">// React does this for you — one listener at the top</span>
+<span class="tok-com">// listens once · catches every poke · runs the right note</span></div>
+  </section>
+
+  <!-- ============ 7 ============ -->
+  <section class="chapter">
+    <div class="chapter-head">
+      <span class="stepno">07</span>
+      <h2 class="h2" style="margin-top:12px">Then the page redraws.</h2>
+      <p class="lead">Your note runs, and React draws the page again with the new answer. That little loop is the whole game.</p>
+    </div>
+
+    <figure>
+      <svg viewBox="0 0 760 300" role="img" aria-label="Loop: poke the button, your note runs, the page redraws, and it starts again">
+        <!-- poke -->
+        <rect x="110" y="215" width="180" height="68" rx="10" fill="var(--primary)"/>
+        <text x="200" y="256" text-anchor="middle" font-size="19" font-weight="600" fill="#FFFFFF">poke</text>
+        <!-- note runs -->
+        <rect x="280" y="40" width="200" height="68" rx="10" fill="var(--tint)" stroke="var(--primary)" stroke-width="1.5"/>
+        <text x="380" y="81" text-anchor="middle" font-size="19" font-weight="600" fill="var(--primary-text)">note runs</text>
+        <!-- page redraws -->
+        <rect x="460" y="215" width="200" height="68" rx="10" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="560" y="256" text-anchor="middle" font-size="19" font-weight="600" fill="var(--ink)">page redraws</text>
+
+        <!-- arrows -->
+        <path d="M 258 214 Q 275 150 330 106" fill="none" stroke="var(--ink-2)" stroke-width="2" marker-end="url(#arr)"/>
+        <text x="266" y="165" font-size="12" fill="var(--ink-2)">click event</text>
+
+        <path d="M 480 86 Q 545 140 522 205" fill="none" stroke="var(--ink-2)" stroke-width="2" marker-end="url(#arr)"/>
+        <text x="520" y="150" font-size="12" fill="var(--ink-2)">new answer</text>
+
+        <path d="M 460 262 Q 380 280 300 262" fill="none" stroke="var(--ink-2)" stroke-width="2" marker-end="url(#arr)"/>
+        <text x="380" y="293" text-anchor="middle" font-size="12" fill="var(--ink-2)">again &amp; again</text>
+      </svg>
+      <figcaption>Poke → note runs → page redraws. Click again — the loop starts over. <b>That's how a click changes a page.</b></figcaption>
+    </figure>
+  </section>
+
+  <footer>
+    <p class="big">That's it. That's React events.</p>
+    <p style="margin-top:10px">Every poke has a name. You stick a note on the thing. Hand it over, and React does the rest.</p>
+  </footer>
+
+</div>
+
+<script>
+  var pokeBtn = document.getElementById('pokeBtn');
+  var pokeCount = document.getElementById('pokeCount');
+  var pokeLog = document.getElementById('pokeLog');
+  var n = 0;
+  pokeBtn.addEventListener('click', function () {
+    n++;
+    pokeCount.textContent = n;
+    pokeLog.textContent = 'click event → your note ran → count ' + n;
+    pokeCount.classList.remove('pop');
+    void pokeCount.offsetWidth; /* restart the animation */
+    pokeCount.classList.add('pop');
+  });
+
+  var keyInput = document.getElementById('keyInput');
+  var keyRead = document.getElementById('keyRead');
+  keyInput.addEventListener('keydown', function (e) {
+    var k = e.key === ' ' ? 'space' : e.key;
+    keyRead.textContent = 'backpack says: key = "' + k + '"';
+  });
+</script>
